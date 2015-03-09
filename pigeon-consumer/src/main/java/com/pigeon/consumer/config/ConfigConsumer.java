@@ -33,10 +33,11 @@ public class ConfigConsumer implements Consumer {
 	private ZooKeeperConnector connector;
 
 	@Override
-	public String consume(final String path) {
+	public String consume(final String key) {
 		Callable<byte[]> callable = new Callable<byte[]>() {
 			public byte[] call() throws Exception {
-				return connector.getClient().getData().usingWatcher(new ConfigConsumerWatcher(connector)).forPath(path);
+				return connector.getClient().getData().usingWatcher(new ConfigConsumerWatcher(connector))
+						.forPath("/" + key);
 			}
 		};
 
@@ -45,18 +46,18 @@ public class ConfigConsumer implements Consumer {
 				.withStopStrategy(StopStrategies.stopAfterAttempt(1)) //尝试次数
 				.build();
 		try {
-			String result = ConfigHolder.get(path);
+			String result = ConfigHolder.get(key);
 			if (result == null) {
-				synchronized (path) {
-					if (ConfigHolder.get(path) == null) {
+				synchronized (key) {
+					if (ConfigHolder.get(key) == null) {
 						result = new String(retryer.call(callable), "UTF-8");
-						ConfigHolder.put(path, result);
+						ConfigHolder.put(key, result);
 					}
 				}
 			}
 			return result;
 		} catch (RetryException e) {
-			logger.error("Failed to get config from ZK for path=[{}]", path, e);
+			logger.error("Failed to get config from ZK for path=[{}]", key, e);
 		} catch (ExecutionException e) {
 			logger.error(e.getMessage(), e);
 		} catch (UnsupportedEncodingException e) {

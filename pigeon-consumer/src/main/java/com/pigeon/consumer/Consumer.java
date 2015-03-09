@@ -13,10 +13,11 @@ public interface Consumer {
 
 	/**
 	 * 
-	 * 从zookeeper服务器的对应节点读取数据
-	 *
+	 * 从zookeeper服务器的对应节点读取数据,key的名字就是ZNode节点的path
+	 * 一个KV键值对，在zookeeper服务端以一个Znode节点的形式保存，key就是Znode path，
+	 * value是 该节点的数据值
 	 * @param path znode节点的路径
 	 * @return
 	 */
-	public String consume(String path);
+	public String consume(String key);
 }
